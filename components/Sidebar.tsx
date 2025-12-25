@@ -12,6 +12,8 @@ import {
   X
 } from 'lucide-react';
 import { useState } from 'react';
+import { useAuthContext } from './AuthProvider';
+import { LogOut } from 'lucide-react';
 
 const menuItems = [
   { name: 'Dashboard', href: '/', icon: BarChart3 },
@@ -24,6 +26,15 @@ const menuItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const { signOut, user } = useAuthContext();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   return (
     <>
@@ -62,7 +73,19 @@ export default function Sidebar() {
         </nav>
 
         <div className="sidebar-footer">
-          <p>© 2025 Event Management</p>
+          {user && (
+            <div className="user-info p-4 border-b border-sidebar-active mb-4">
+              <p className="text-sm font-medium text-white truncate">{user.email}</p>
+            </div>
+          )}
+          <button
+            onClick={handleSignOut}
+            className="nav-item w-full text-left border-none bg-transparent cursor-pointer text-red-400 hover:bg-red-500/10 hover:text-red-300"
+          >
+            <LogOut size={20} />
+            <span>Cerrar Sesión</span>
+          </button>
+          <p className="mt-4 opacity-50 text-[10px]">© 2025 Event Management</p>
         </div>
       </aside>
     </>
