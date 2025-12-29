@@ -68,6 +68,21 @@ h4 {
   box-shadow: var(--shadow);
 }
 
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-responsive .data-table {
+  min-width: 800px;
+}
+
+.table-card {
+  padding: 0 !important;
+  overflow: hidden;
+}
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -214,15 +229,23 @@ h4 {
 
 @media (max-width: 768px) {
   .sidebar {
-    transform: translateX(-100%);
+    display: none;
+    /* Hide sidebar completely in layout, only show inside MobileNav menu or desktop */
   }
 
-  .sidebar.open {
-    transform: translateX(0);
+  .layout-wrapper {
+    margin-left: 0;
+  }
+
+  .main-content {
+    padding: 1rem;
+    padding-bottom: 80px;
+    /* Space for bottom nav */
   }
 
   .mobile-toggle {
-    display: block;
+    display: none;
+    /* We use bottom nav now */
   }
 }
 

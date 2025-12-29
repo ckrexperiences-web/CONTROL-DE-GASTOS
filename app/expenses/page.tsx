@@ -9,12 +9,13 @@ import { ExpenseStatus } from '@/types/database';
 import { exportToExcel, exportToPDF } from '@/lib/exportUtils';
 
 export default function ExpensesPage() {
-    const { expenses, loading, addExpense, deleteExpense, fetchExpenses } = useExpenses();
+    const { expenses, loading, addExpense, deleteExpense, updateExpense, fetchExpenses } = useExpenses();
     const { events } = useEvents();
     const { items: categories } = useMasterData('categories');
     const { items: responsibles } = useMasterData('responsibles');
 
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingId, setEditingId] = useState<string | null>(null);
     const [selectedEventId, setSelectedEventId] = useState('all');
 
     const [formData, setFormData] = useState({
@@ -35,9 +36,58 @@ export default function ExpensesPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        await addExpense(formData);
+        try {
+            if (editingId) {
+                await updateExpense(editingId, formData);
+            } else {
+                await addExpense(formData);
+            }
+            setIsModalOpen(false);
+            setEditingId(null);
+            // Reset form
+            setFormData({
+                event_id: '',
+                category_id: '',
+                responsible_id: '',
+                amount: 0,
+                date: new Date().toISOString().split('T')[0],
+                description: '',
+                status: 'pending' as ExpenseStatus,
+                observations: ''
+            });
+        } catch (err: any) {
+            alert("Error al guardar el gasto: " + (err.message || "Error desconocido"));
+        }
+    };
+
+    const handleEdit = (expense: any) => {
+        setEditingId(expense.id);
+        setFormData({
+            event_id: expense.event_id,
+            category_id: expense.category_id,
+            responsible_id: expense.responsible_id,
+            amount: expense.amount,
+            date: new Date(expense.date).toISOString().split('T')[0],
+            description: expense.description,
+            status: expense.status,
+            observations: expense.observations || ''
+        });
+        setIsModalOpen(true);
+    };
+
+    const closeModal = () => {
         setIsModalOpen(false);
-        // Reset form
+        setEditingId(null);
+        setFormData({
+            event_id: '',
+            category_id: '',
+            responsible_id: '',
+            amount: 0,
+            date: new Date().toISOString().split('T')[0],
+            description: '',
+            status: 'pending' as ExpenseStatus,
+            observations: ''
+        });
     };
 
     return (
@@ -78,7 +128,20 @@ export default function ExpensesPage() {
                         <FileText size={18} style={{ marginRight: '0.5rem' }} />
                         PDF
                     </button>
-                    <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
+                    <button className="btn btn-primary" onClick={() => {
+                        setEditingId(null);
+                        setFormData({
+                            event_id: '',
+                            category_id: '',
+                            responsible_id: '',
+                            amount: 0,
+                            date: new Date().toISOString().split('T')[0],
+                            description: '',
+                            status: 'pending' as ExpenseStatus,
+                            observations: ''
+                        });
+                        setIsModalOpen(true);
+                    }}>
                         <Plus size={20} />
                         <span>Registrar Gasto</span>
                     </button>
@@ -103,42 +166,49 @@ export default function ExpensesPage() {
                 <p>Cargando gastos...</p>
             ) : (
                 <div className="card table-card">
-                    <table className="data-table">
-                        <thead>
-                            <tr>
-                                <th>Fecha</th>
-                                <th>Evento</th>
-                                <th>Categoría</th>
-                                <th>Descripción</th>
-                                <th>Monto</th>
-                                <th>Estado</th>
-                                <th align="right">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {expenses.map((expense) => (
-                                <tr key={expense.id}>
-                                    <td>{new Date(expense.date).toLocaleDateString()}</td>
-                                    <td>{expense.events?.name}</td>
-                                    <td>{expense.categories?.name}</td>
-                                    <td>{expense.description}</td>
-                                    <td className="font-bold text-danger">
-                                        S/ {Number(expense.amount).toFixed(2)}
-                                    </td>
-                                    <td>
-                                        <span className={`status-pill ${expense.status}`}>
-                                            {expense.status === 'paid' ? 'Pagado' : 'Pendiente'}
-                                        </span>
-                                    </td>
-                                    <td align="right">
-                                        <button className="btn-icon danger" onClick={() => deleteExpense(expense.id)}>
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </td>
+                    <div className="table-responsive">
+                        <table className="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Evento</th>
+                                    <th>Categoría</th>
+                                    <th>Descripción</th>
+                                    <th>Monto</th>
+                                    <th>Estado</th>
+                                    <th align="right">Acciones</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {expenses.map((expense) => (
+                                    <tr key={expense.id}>
+                                        <td>{new Date(expense.date).toLocaleDateString()}</td>
+                                        <td>{expense.events?.name}</td>
+                                        <td>{expense.categories?.name}</td>
+                                        <td>{expense.description}</td>
+                                        <td className="font-bold text-danger">
+                                            S/ {Number(expense.amount).toFixed(2)}
+                                        </td>
+                                        <td>
+                                            <span className={`status-pill ${expense.status}`}>
+                                                {expense.status === 'paid' ? 'Pagado' : 'Pendiente'}
+                                            </span>
+                                        </td>
+                                        <td align="right">
+                                            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                                                <button className="btn-icon secondary" onClick={() => handleEdit(expense)}>
+                                                    <Edit2 size={18} />
+                                                </button>
+                                                <button className="btn-icon danger" onClick={() => deleteExpense(expense.id)}>
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             )}
 
@@ -146,7 +216,7 @@ export default function ExpensesPage() {
             {isModalOpen && (
                 <div className="modal-overlay">
                     <div className="modal-content card">
-                        <h2>Registrar Nuevo Gasto</h2>
+                        <h2>{editingId ? 'Editar Gasto' : 'Registrar Nuevo Gasto'}</h2>
                         <form onSubmit={handleSubmit} className="expense-form">
                             <div className="form-grid">
                                 <div className="form-group">
@@ -231,11 +301,11 @@ export default function ExpensesPage() {
                                 </div>
                             </div>
                             <div className="modal-actions">
-                                <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>
+                                <button type="button" className="btn btn-secondary" onClick={closeModal}>
                                     Cancelar
                                 </button>
                                 <button type="submit" className="btn btn-primary">
-                                    Guardar Gasto
+                                    {editingId ? 'Actualizar Gasto' : 'Guardar Gasto'}
                                 </button>
                             </div>
                         </form>
@@ -249,6 +319,14 @@ export default function ExpensesPage() {
           justify-content: space-between;
           align-items: center;
           margin-bottom: 2rem;
+          gap: 1rem;
+          flex-wrap: wrap;
+        }
+
+        .header-actions {
+          display: flex;
+          gap: 0.5rem;
+          flex-wrap: wrap;
         }
 
         .toolbar {

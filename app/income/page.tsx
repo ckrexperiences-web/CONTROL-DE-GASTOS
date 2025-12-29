@@ -101,36 +101,38 @@ export default function IncomePage() {
                 <p>Cargando ingresos...</p>
             ) : (
                 <div className="card table-card">
-                    <table className="data-table">
-                        <thead>
-                            <tr>
-                                <th>Fecha</th>
-                                <th>Evento</th>
-                                <th>Concepto</th>
-                                <th>Método</th>
-                                <th>Monto</th>
-                                <th align="right">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {income.map((entry) => (
-                                <tr key={entry.id}>
-                                    <td>{new Date(entry.date).toLocaleDateString()}</td>
-                                    <td>{entry.events?.name}</td>
-                                    <td>{entry.concept}</td>
-                                    <td>{entry.payment_methods?.name}</td>
-                                    <td className="font-bold text-success">
-                                        S/ {Number(entry.amount).toFixed(2)}
-                                    </td>
-                                    <td align="right">
-                                        <button className="btn-icon danger" onClick={() => deleteIncome(entry.id)}>
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </td>
+                    <div className="table-responsive">
+                        <table className="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Evento</th>
+                                    <th>Concepto</th>
+                                    <th>Método</th>
+                                    <th>Monto</th>
+                                    <th align="right">Acciones</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {income.map((entry) => (
+                                    <tr key={entry.id}>
+                                        <td>{new Date(entry.date).toLocaleDateString()}</td>
+                                        <td>{entry.events?.name}</td>
+                                        <td>{entry.concept}</td>
+                                        <td>{entry.payment_methods?.name}</td>
+                                        <td className="font-bold text-success">
+                                            S/ {Number(entry.amount).toFixed(2)}
+                                        </td>
+                                        <td align="right">
+                                            <button className="btn-icon danger" onClick={() => deleteIncome(entry.id)}>
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             )}
 
@@ -212,6 +214,14 @@ export default function IncomePage() {
           justify-content: space-between;
           align-items: center;
           margin-bottom: 2rem;
+          gap: 1rem;
+          flex-wrap: wrap;
+        }
+
+        .header-actions {
+          display: flex;
+          gap: 0.5rem;
+          flex-wrap: wrap;
         }
 
         .toolbar {

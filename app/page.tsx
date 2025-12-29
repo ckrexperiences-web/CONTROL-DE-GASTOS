@@ -18,7 +18,16 @@ import {
 } from 'recharts';
 import { TrendingDown, TrendingUp, DollarSign, AlertTriangle } from 'lucide-react';
 
-const COLORS = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+const COLORS = [
+  '#3b82f6', // blue-500
+  '#10b981', // emerald-500
+  '#f59e0b', // amber-500
+  '#ef4444', // red-500
+  '#8b5cf6', // violet-500
+  '#06b6d4', // cyan-500
+  '#ec4899', // pink-500
+  '#6366f1', // indigo-500
+];
 
 export default function Dashboard() {
   const [selectedEventId, setSelectedEventId] = useState('all');
@@ -93,24 +102,30 @@ export default function Dashboard() {
             <div className="card chart-card">
               <h4>Gastos por Categoría</h4>
               <div className="chart-container">
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={stats.expensesByCategory}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart
+                    layout="vertical"
+                    data={[...stats.expensesByCategory].sort((a, b) => b.value - a.value)}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                    <XAxis type="number" hide />
+                    <YAxis
+                      type="category"
+                      dataKey="name"
+                      width={150}
+                      tick={{ fontSize: 11 }}
+                    />
+                    <Tooltip
+                      formatter={(value: number) => [`S/ ${value.toFixed(2)}`, 'Monto']}
+                      contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    />
+                    <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={20}>
                       {stats.expensesByCategory.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                  </PieChart>
+                    </Bar>
+                  </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
@@ -208,7 +223,8 @@ export default function Dashboard() {
         }
 
         .chart-container {
-          height: 300px;
+          height: 350px;
+          font-size: 0.8rem;
         }
 
         @media (max-width: 1024px) {

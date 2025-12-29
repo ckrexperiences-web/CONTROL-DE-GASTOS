@@ -8,6 +8,7 @@ import { Plus, Search, Calendar as CalendarIcon, MoreVertical, Edit2, Trash2 } f
 export default function EventsPage() {
   const { events, loading, addEvent, deleteEvent, updateEvent } = useEvents();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({
     name: '',
@@ -22,8 +23,13 @@ export default function EventsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await addEvent(formData);
+      if (editingEventId) {
+        await updateEvent(editingEventId, formData);
+      } else {
+        await addEvent(formData);
+      }
       setIsModalOpen(false);
+      setEditingEventId(null);
       setFormData({
         name: '',
         date: new Date().toISOString().split('T')[0],
@@ -32,6 +38,26 @@ export default function EventsPage() {
     } catch (err: any) {
       alert("Error al guardar el evento: " + (err.message || "Error desconocido"));
     }
+  };
+
+  const handleEdit = (event: any) => {
+    setEditingEventId(event.id);
+    setFormData({
+      name: event.name,
+      date: new Date(event.date).toISOString().split('T')[0],
+      status: event.status
+    });
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingEventId(null);
+    setFormData({
+      name: '',
+      date: new Date().toISOString().split('T')[0],
+      status: 'planned'
+    });
   };
 
   const statusColors = {
@@ -53,7 +79,15 @@ export default function EventsPage() {
           <h1>Gestión de Eventos</h1>
           <p className="text-secondary">Administra y organiza tus eventos de producción</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
+        <button className="btn btn-primary" onClick={() => {
+          setEditingEventId(null);
+          setFormData({
+            name: '',
+            date: new Date().toISOString().split('T')[0],
+            status: 'planned'
+          });
+          setIsModalOpen(true);
+        }}>
           <Plus size={20} />
           <span>Nuevo Evento</span>
         </button>
@@ -81,7 +115,7 @@ export default function EventsPage() {
                 <span className={`status-badge ${event.status}`}>
                   {statusLabels[event.status]}
                 </span>
-                <button className="btn-icon">
+                <button className="btn-icon" onClick={() => handleEdit(event)}>
                   <MoreVertical size={18} />
                 </button>
               </div>
@@ -96,7 +130,7 @@ export default function EventsPage() {
                 <button className="btn btn-outline" onClick={() => deleteEvent(event.id)}>
                   <Trash2 size={16} />
                 </button>
-                <button className="btn btn-primary">Ver Detalles</button>
+                <button className="btn btn-primary" onClick={() => handleEdit(event)}>Ver Detalles</button>
               </div>
             </div>
           ))}
@@ -107,7 +141,7 @@ export default function EventsPage() {
       {isModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content card">
-            <h2>Crear Nuevo Evento</h2>
+            <h2>{editingEventId ? 'Editar Evento' : 'Crear Nuevo Evento'}</h2>
             <form onSubmit={handleSubmit}>
               <div className="form-group">
                 <label>Nombre del Evento</label>
@@ -140,7 +174,7 @@ export default function EventsPage() {
                 </select>
               </div>
               <div className="modal-actions">
-                <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>
+                <button type="button" className="btn btn-secondary" onClick={closeModal}>
                   Cancelar
                 </button>
                 <button type="submit" className="btn btn-primary">
