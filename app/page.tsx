@@ -117,7 +117,7 @@ export default function Dashboard() {
                       tick={{ fontSize: 11 }}
                     />
                     <Tooltip
-                      formatter={(value: number) => [`S/ ${value.toFixed(2)}`, 'Monto']}
+                      formatter={(value: any) => [`S/ ${Number(value).toFixed(2)}`, 'Monto']}
                       contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                     />
                     <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={20}>
